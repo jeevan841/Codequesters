@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -20,18 +15,22 @@
             --warning-color: #EF9F27;
             --danger-color: #E24B4A;
             --info-color: #1D9E75;
-            --bg-primary: #FFFFFF;
+            --bg-primary: rgba(255, 255, 255, 0.85);
             --bg-secondary: #F1EFE8;
             --bg-tertiary: #FAFAF8;
             --text-primary: #2C2C2A;
             --text-secondary: #5F5E5A;
-            --border-color: rgba(0, 0, 0, 0.15);
+            --border-color: rgba(0, 0, 0, 0.1);
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: var(--bg-tertiary);
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: radial-gradient(circle at top right, #f8f9ff 0%, #f0f1f8 100%);
             color: var(--text-primary);
+            min-height: 100vh;
         }
 
         /* Sidebar */
@@ -41,11 +40,14 @@
             top: 0;
             width: 260px;
             height: 100vh;
-            background: var(--bg-primary);
-            border-right: 1px solid var(--border-color);
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-right: 1px solid var(--glass-border);
             padding: 24px 0;
             overflow-y: auto;
             z-index: 100;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.02);
         }
 
         .sidebar-header {
@@ -258,10 +260,19 @@
         }
 
         .stat-card {
-            background: var(--bg-primary);
-            border-radius: 12px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 16px;
             padding: 24px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
         }
 
         .stat-header {
@@ -435,9 +446,18 @@
             background: #E1F5EE;
         }
 
-        .activity-content {
-            flex: 1;
+        /* Lead Quality Badges */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
+        .badge.hot { background: #fee2e2; color: #991b1b; }
+        .badge.warm { background: #ffedd5; color: #9a3412; }
+        .badge.cold { background: #f3f4f6; color: #374151; }
 
         .activity-title {
             font-size: 14px;
@@ -623,34 +643,42 @@
         .modal-overlay {
             display: none;
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(4px);
             z-index: 1000;
             align-items: center;
             justify-content: center;
         }
+
         .modal-overlay.active {
             display: flex;
         }
+
         .ai-modal {
             background: var(--bg-primary);
             width: 90%;
             max-width: 400px;
             border-radius: 16px;
             padding: 24px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
             position: relative;
         }
+
         .ai-modal h2 {
             font-size: 20px;
             margin-bottom: 8px;
         }
+
         .ai-modal p {
             color: var(--text-secondary);
             font-size: 14px;
             margin-bottom: 20px;
         }
+
         .ai-modal input {
             width: 100%;
             padding: 12px 16px;
@@ -661,10 +689,12 @@
             outline: none;
             transition: all 0.2s;
         }
+
         .ai-modal input:focus {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(55,138,221,0.1);
+            box-shadow: 0 0 0 3px rgba(55, 138, 221, 0.1);
         }
+
         .modal-close {
             position: absolute;
             top: 20px;
@@ -753,7 +783,8 @@
                     <input type="text" placeholder="Search...">
                 </div>
                 <div class="header-actions">
-                    <button class="btn btn-primary" onclick="startCall()" style="display: flex; align-items: center; gap: 8px;">
+                    <button class="btn btn-primary" onclick="startCall()"
+                        style="display: flex; align-items: center; gap: 8px;">
                         📞 Call AI Agent
                     </button>
                     <div style="position: relative;">
@@ -761,9 +792,13 @@
                             <span>🔔</span>
                             <span class="notification-dot" id="noti-dot" style="display: none;"></span>
                         </button>
-                        <div class="notifications-dropdown" id="notiDropdown" style="display: none; position: absolute; top: 50px; right: 0; width: 320px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); z-index: 1000; padding: 16px; max-height: 400px; overflow-y: auto;">
-                            <h4 style="margin: 0 0 12px 0; font-size: 14px; color: var(--text-secondary); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">New Callers</h4>
-                            <div id="noti-list" style="display: flex; flex-direction: column; gap: 8px;">Loading...</div>
+                        <div class="notifications-dropdown" id="notiDropdown"
+                            style="display: none; position: absolute; top: 50px; right: 0; width: 320px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); z-index: 1000; padding: 16px; max-height: 400px; overflow-y: auto;">
+                            <h4
+                                style="margin: 0 0 12px 0; font-size: 14px; color: var(--text-secondary); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                                New Callers</h4>
+                            <div id="noti-list" style="display: flex; flex-direction: column; gap: 8px;">Loading...
+                            </div>
                         </div>
                     </div>
                     <div class="user-avatar">DU</div>
@@ -776,41 +811,41 @@
             <div class="stat-card">
                 <div class="stat-header">
                     <div class="stat-icon blue">💰</div>
-                    <div class="stat-trend up">↑ 12.5%</div>
+                    <div class="stat-trend up" style="background: #e0f2fe; color: #0369a1;">Live</div>
                 </div>
                 <div class="stat-label">Total Revenue</div>
                 <h2 class="stat-value" id="money">₹0</h2>
-                <div class="stat-footer">Live tracker active</div>
+                <div class="stat-footer">Synced with Exotel CRM</div>
             </div>
 
             <div class="stat-card">
                 <div class="stat-header">
-                    <div class="stat-icon green">👥</div>
-                    <div class="stat-trend up">↑ 8.2%</div>
+                    <div class="stat-icon green">📞</div>
+                    <div class="stat-trend" style="background: #dcfce7; color: #15803d;">Active</div>
                 </div>
-                <div class="stat-label">Active Users</div>
-                <div class="stat-value">8,234</div>
-                <div class="stat-footer">+623 new users this week</div>
+                <div class="stat-label">Total Calls</div>
+                <div class="stat-value" id="total-calls">0</div>
+                <div class="stat-footer">Incoming & Outbound</div>
             </div>
 
             <div class="stat-card">
                 <div class="stat-header">
-                    <div class="stat-icon amber">📦</div>
-                    <div class="stat-trend down">↓ 3.1%</div>
+                    <div class="stat-icon amber">🔥</div>
+                    <div class="stat-trend" style="background: #fef3c7; color: #b45309;">Hot</div>
                 </div>
-                <div class="stat-label">Orders</div>
-                <div class="stat-value">1,428</div>
-                <div class="stat-footer">-47 from last week</div>
+                <div class="stat-label">Hot Leads</div>
+                <div class="stat-value" id="hot-leads">0</div>
+                <div class="stat-footer">Ready to close</div>
             </div>
 
             <div class="stat-card">
                 <div class="stat-header">
-                    <div class="stat-icon coral">📈</div>
-                    <div class="stat-trend up">↑ 15.3%</div>
+                    <div class="stat-icon coral">💎</div>
+                    <div class="stat-trend" style="background: #ffedd5; color: #ea580c;">Priority</div>
                 </div>
-                <div class="stat-label">Conversion Rate</div>
-                <div class="stat-value">4.8%</div>
-                <div class="stat-footer">Above industry average</div>
+                <div class="stat-label">Opportunity Value</div>
+                <div class="stat-value" id="opp-value">₹0</div>
+                <div class="stat-footer">Potential revenue from Hot leads</div>
             </div>
         </div>
 
@@ -894,7 +929,10 @@
                     </tr>
                 </thead>
                 <tbody id="crm-tbody">
-                    <tr><td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 12px;">Waiting for Exotel polling data...</td></tr>
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 12px;">Waiting
+                            for Exotel polling data...</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -993,7 +1031,8 @@
                     <tr>
                         <td>
                             <div class="user-info">
-                                <div class="user-info-avatar" style="background: var(--primary-color); color: white;">AT</div>
+                                <div class="user-info-avatar" style="background: var(--primary-color); color: white;">AT
+                                </div>
                                 <div class="user-info-details">
                                     <div class="user-info-name">Alex Turner</div>
                                     <div class="user-info-email">alex.t@codequest.dev</div>
@@ -1008,14 +1047,17 @@
                     <tr>
                         <td>
                             <div class="user-info">
-                                <div class="user-info-avatar" style="background: var(--success-color); color: white;">MR</div>
+                                <div class="user-info-avatar" style="background: var(--success-color); color: white;">MR
+                                </div>
                                 <div class="user-info-details">
                                     <div class="user-info-name">Maya Roberts</div>
                                     <div class="user-info-email">maya.r@codequest.dev</div>
                                 </div>
                             </div>
                         </td>
-                        <td><span class="status-badge status-pending" style="background: rgba(239, 159, 39, 0.2); color: var(--warning-color);">In Call</span></td>
+                        <td><span class="status-badge status-pending"
+                                style="background: rgba(239, 159, 39, 0.2); color: var(--warning-color);">In Call</span>
+                        </td>
                         <td>Sales Rep</td>
                         <td>Just now</td>
                         <td><button class="action-btn">Edit</button></td>
@@ -1029,7 +1071,8 @@
         <header class="header">
             <div class="header-left">
                 <h1>API Analytics</h1>
-                <p class="header-subtitle">Live endpoint routing and usage metrics tracked natively via FastAPI Middleware.</p>
+                <p class="header-subtitle">Live endpoint routing and usage metrics tracked natively via FastAPI
+                    Middleware.</p>
             </div>
         </header>
         <div class="table-card">
@@ -1077,10 +1120,13 @@
         </header>
         <div class="table-card" style="padding: 24px; max-width: 600px;">
             <h3 style="margin-top: 0; margin-bottom: 24px; font-size: 16px;">Core Services</h3>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 16px; margin-bottom: 16px;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 16px; margin-bottom: 16px;">
                 <div>
-                    <div style="font-weight: 600; font-size: 14px; color: var(--text-primary);">Exotel AI Voice Agent</div>
-                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">Enable outbound calling and background data polling.</div>
+                    <div style="font-weight: 600; font-size: 14px; color: var(--text-primary);">Exotel AI Voice Agent
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">Enable outbound calling
+                        and background data polling.</div>
                 </div>
                 <button id="service-btn" class="btn btn-primary" onclick="toggleServices()">Disable Services</button>
             </div>
@@ -1091,28 +1137,39 @@
         <header class="header">
             <div class="header-left">
                 <h1>Data Converter (.SQL)</h1>
-                <p class="header-subtitle">Convert your pre-existing .CSV contact files into native .SQL and merge them dynamically.</p>
+                <p class="header-subtitle">Convert your pre-existing .CSV contact files into native .SQL and merge them
+                    dynamically.</p>
             </div>
         </header>
 
         <div style="display: flex; gap: 24px; padding-bottom: 300px;">
             <div class="table-card" style="padding: 24px; flex: 1; flex-direction: column; display: flex; gap: 16px;">
                 <h3 style="margin: 0; font-size: 16px;">1. Upload External Data</h3>
-                <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">Select a .CSV or .XLSX Excel file featuring (phone, business_type, team_size) columns to initiate parsing.</p>
-                
-                <input type="file" id="csvFileInput" accept=".csv, .xlsx, .xls" class="input-field" style="padding: 10px; cursor: pointer;">
+                <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">Select a .CSV or .XLSX Excel file
+                    featuring (phone, business_type, team_size) columns to initiate parsing.</p>
+
+                <input type="file" id="csvFileInput" accept=".csv, .xlsx, .xls" class="input-field"
+                    style="padding: 10px; cursor: pointer;">
                 <div style="display: flex; gap: 12px; align-items: center; margin-top: 8px;">
                     <button class="btn btn-primary" onclick="convertCSVtoSQL()">Generate .SQL Output</button>
-                    <button class="btn btn-primary" onclick="convertAndPushToDatabase()" style="background: var(--success-color, #2ecc71); border-color: var(--success-color, #2ecc71);">Add to Database</button>
+                    <button class="btn btn-primary" onclick="convertAndPushToDatabase()"
+                        style="background: var(--success-color, #2ecc71); border-color: var(--success-color, #2ecc71);">Add
+                        to Database</button>
                 </div>
             </div>
 
             <div class="table-card" style="padding: 24px; flex: 1; display: flex; flex-direction: column; gap: 16px;">
                 <h3 style="margin: 0; font-size: 16px;">2. Executable .SQL Statement</h3>
-                <textarea id="sqlOutputContent" class="input-field" rows="6" placeholder="The parsed .SQL query will compile here..." readonly style="font-family: monospace; font-size: 12px; resize: none; background: rgba(0,0,0,0.4);"></textarea>
+                <textarea id="sqlOutputContent" class="input-field" rows="6"
+                    placeholder="The parsed .SQL query will compile here..." readonly
+                    style="font-family: monospace; font-size: 12px; resize: none; background: rgba(0,0,0,0.4);"></textarea>
                 <div style="display: flex; gap: 12px;">
-                    <button class="btn btn-primary" onclick="pushSQLToDatabase()" style="background: var(--success-color, #2ecc71); border-color: var(--success-color, #2ecc71);">Execute on Database</button>
-                    <button class="btn" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" onclick="downloadSQLFile()">Download .SQL File</button>
+                    <button class="btn btn-primary" onclick="pushSQLToDatabase()"
+                        style="background: var(--success-color, #2ecc71); border-color: var(--success-color, #2ecc71);">Execute
+                        on Database</button>
+                    <button class="btn"
+                        style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);"
+                        onclick="downloadSQLFile()">Download .SQL File</button>
                 </div>
             </div>
         </div>
@@ -1219,7 +1276,7 @@
         });
 
         // Search Filter Logic
-        document.querySelector(".search-box input").addEventListener("input", function() {
+        document.querySelector(".search-box input").addEventListener("input", function () {
             const value = this.value.toLowerCase();
             document.querySelectorAll("tbody tr").forEach(row => {
                 row.style.display = row.innerText.toLowerCase().includes(value) ? "" : "none";
@@ -1228,81 +1285,117 @@
     </script>
     <script>
         // Hello user logic
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             const userName = localStorage.getItem("userName");
             if (userName) {
                 document.getElementById("welcomeMessage").innerText = "Hello " + userName;
             }
         });
 
-        // 1. STATS CARDS
-        async function loadStats() {
-            const res = await fetch("http://127.0.0.1:8000/stats");
-            const data = await res.json();
+        // 1-4 Unified Sync Dashboard
+        async function syncDashboard() {
+            try {
+                // Fetch basic stats from endpoint
+                const statsRes = await fetch("/stats");
+                const stats = await statsRes.json();
+                
+                // Fetch leads for all lists and advanced counters
+                const leadsRes = await fetch("/leads");
+                const leads = await leadsRes.json();
 
-            document.querySelectorAll(".stat-value")[0].innerText = "₹" + data.estimated_revenue;
-            document.querySelectorAll(".stat-value")[1].innerText = data.total_calls;
-            document.querySelectorAll(".stat-value")[2].innerText = data.meetings_booked;
+                // 1. Basic Stat Cards
+                document.getElementById("money").innerText = "₹" + (stats.estimated_revenue || 0).toLocaleString();
+                document.getElementById("total-calls").innerText = stats.total_calls || 0;
+
+                const hotLeads = leads.filter(l => l.lead_quality === 'Hot');
+                document.getElementById("hot-leads").innerText = hotLeads.length;
+
+                const oppValue = hotLeads.reduce((acc, l) => {
+                    const price = parseInt(l.revenue.replace(/[^0-9]/g, '')) || 0;
+                    return acc + price;
+                }, 0);
+                document.getElementById("opp-value").innerText = "₹" + oppValue.toLocaleString();
+
+                // 2. Update Charts
+                updateDashboardChart(leads);
+
+                // Update Table
+                const tbody = document.getElementById("crm-tbody");
+                if (tbody) {
+                    tbody.innerHTML = leads.length ? "" : "<tr><td colspan='5' style='text-align:center; padding: 40px; color: var(--text-secondary);'>No leads recorded yet. Ready to receive calls.</td></tr>";
+                    leads.forEach(l => {
+                        const qualityClass = l.lead_quality.toLowerCase();
+                        tbody.innerHTML += `
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td>${l.phone || "Unknown"}</td>
+                            <td>${l.business_type}</td>
+                            <td style="font-weight: 500;">
+                                <span class="badge ${qualityClass}">${l.lead_quality}</span>
+                                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Score: ${l.lead_score}/100</div>
+                            </td>
+                            <td>${l.meeting_time || "-"}</td>
+                            <td><button class="action-btn" onclick="showLeadDetails(${l.id})">Details</button></td>
+                        </tr>`;
+                    });
+                }
+
+                // Update Activity Feed
+                const activityContainer = document.querySelector(".activity-list");
+                if (activityContainer) {
+                    activityContainer.innerHTML = leads.length ? "" : "<div style='text-align:center; padding: 20px; font-size: 13px; color: var(--text-secondary);'>Awaiting incoming events...</div>";
+                    leads.slice(0, 5).forEach(lead => {
+                        activityContainer.innerHTML += `
+                        <div class="activity-item">
+                            <div class="activity-icon ${lead.lead_quality === 'Hot' ? 'success' : 'info'}">📞</div>
+                            <div class="activity-content">
+                                <div class="activity-title">${lead.business_type || "Inbound Call"}</div>
+                                <div class="activity-description">${lead.summary}</div>
+                            </div>
+                            <div class="activity-time">${timeAgo(lead.created_at)}</div>
+                        </div>`;
+                    });
+                }
+
+            } catch (err) {
+                console.error("Dashboard sync failed", err);
+            }
         }
-        loadStats();
 
-        // 2. REVENUE CHART
-        async function loadChart() {
-            const res = await fetch("http://127.0.0.1:8000/leads");
-            const leads = await res.json();
-
-            const labels = leads.map(l => l.created_at);
-            const values = leads.map((_, i) => (i + 1) * 2000);
-
-            revenueChart.data.labels = labels;
-            revenueChart.data.datasets[0].data = values;
+        function updateDashboardChart(leads) {
+            if (!leads.length) return;
+            const sorted = [...leads].sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+            revenueChart.data.labels = sorted.map(l => new Date(l.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
+            
+            // Build real cumulative revenue trends
+            let cumulative = 0;
+            revenueChart.data.datasets[0].data = sorted.map(l => {
+                const val = parseInt(l.revenue.replace(/[^0-9]/g, '')) || 0;
+                cumulative += (val/10); // Scaling logic for visual growth
+                return cumulative;
+            });
             revenueChart.update();
         }
-        loadChart();
 
-        // 3. RECENT ACTIVITY
-        async function loadActivity() {
-            const res = await fetch("http://127.0.0.1:8000/leads");
-            const leads = await res.json();
-
-            const container = document.querySelector(".activity-list");
-            container.innerHTML = "";
-
-            leads.slice(0,5).forEach(lead => {
-                container.innerHTML += `
-                <div class="activity-item">
-                    <div class="activity-icon success">📞</div>
-                    <div class="activity-content">
-                        <div class="activity-title">${lead.business_type || "New Lead"}</div>
-                        <div class="activity-description">${lead.summary}</div>
-                    </div>
-                    <div class="activity-time">Just now</div>
-                </div>`;
-            });
+        function timeAgo(dateString) {
+            const date = new Date(dateString);
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 60) return "Just now";
+            if (seconds < 3600) return Math.floor(seconds/60) + "m ago";
+            if (seconds < 86400) return Math.floor(seconds/3600) + "h ago";
+            return date.toLocaleDateString();
         }
-        loadActivity();
 
-        // 4. USERS TABLE -> CRM TABLE
-        async function loadLeadsTable() {
-            const res = await fetch("http://127.0.0.1:8000/leads");
-            const leads = await res.json();
-
-            const tbody = document.getElementById("crm-tbody");
-            if(!tbody) return;
-            tbody.innerHTML = "";
-
-            leads.forEach(l => {
-                tbody.innerHTML += `
-                <tr>
-                    <td>${l.phone || "Unknown"}</td>
-                    <td>${l.business_type}</td>
-                    <td>${l.team_size}</td>
-                    <td>${l.meeting_time || "Not booked"}</td>
-                    <td><button class="action-btn" onclick="alert('${l.summary}')">View</button></td>
-                </tr>`;
-            });
+        async function showLeadDetails(id) {
+            try {
+                const res = await fetch(`/leads/${id}`);
+                const l = await res.json();
+                alert(`--- Lead Details ---\n\nTranscript: ${l.transcript}\n\nSummary: ${l.summary}\n\nLead Score: ${l.lead_score}/100`);
+            } catch(e) {}
         }
-        loadLeadsTable();
+
+        // Initial load and consolidated polling
+        syncDashboard();
+        setInterval(syncDashboard, 15000);
 
         // 5. NOTIFICATION DROPDOWN
         let isNotiOpen = false;
@@ -1314,13 +1407,13 @@
 
         async function loadNotifications() {
             try {
-                const res = await fetch("http://127.0.0.1:8000/leads");
+                const res = await fetch("/leads");
                 const leads = await res.json();
-                
+
                 const list = document.getElementById("noti-list");
                 list.innerHTML = "";
 
-                if(leads.length === 0) {
+                if (leads.length === 0) {
                     list.innerHTML = "<div style='color: var(--text-secondary); font-size: 13px;'>No new callers recorded yet.</div>";
                 }
 
@@ -1335,22 +1428,22 @@
                         </div>
                     `;
                 });
-                
+
                 // Hide red dot if they check notifications
                 document.getElementById("noti-dot").style.display = "none";
-            } catch (e) {}
+            } catch (e) { }
         }
-        
+
         // Auto check for new calls every 10s to trigger the red dot globally
         setInterval(async () => {
             if (localStorage.getItem("services_active") === "false") return;
             try {
-                const res = await fetch("http://127.0.0.1:8000/leads");
+                const res = await fetch("/leads");
                 const leads = await res.json();
                 if (leads.length > 0 && !isNotiOpen) {
                     document.getElementById("noti-dot").style.display = "block";
                 }
-            } catch(e) {}
+            } catch (e) { }
         }, 10000);
 
         // 6. LOGOUT BUTTON
@@ -1367,13 +1460,13 @@
             document.getElementById('settings-section').style.display = 'none';
             document.getElementById('files-section').style.display = 'none';
             document.getElementById(sectionId).style.display = 'block';
-            
-            document.querySelectorAll('.sidebar-nav .nav-item').forEach(el => el.classList.remove('active'));
-            if(element) element.classList.add('active');
 
-            if(sectionId === 'analytics-section') {
+            document.querySelectorAll('.sidebar-nav .nav-item').forEach(el => el.classList.remove('active'));
+            if (element) element.classList.add('active');
+
+            if (sectionId === 'analytics-section') {
                 loadEndpoints();
-            } else if(sectionId === 'messages-section') {
+            } else if (sectionId === 'messages-section') {
                 loadMessages();
             }
         }
@@ -1381,7 +1474,7 @@
         // API Analytics Loader
         async function loadEndpoints() {
             try {
-                const res = await fetch("http://127.0.0.1:8000/api/analytics");
+                const res = await fetch("/api/analytics");
                 const data = await res.json();
                 const tbody = document.getElementById("analytics-tbody");
                 tbody.innerHTML = "";
@@ -1401,11 +1494,11 @@
         // Transcripts & Messages Loader
         async function loadMessages() {
             try {
-                const res = await fetch("http://127.0.0.1:8000/leads");
+                const res = await fetch("/leads");
                 const leads = await res.json();
                 const container = document.getElementById("messages-container");
                 container.innerHTML = "";
-                
+
                 if (leads.length === 0) {
                     container.innerHTML = "<p style='color: var(--text-secondary); text-align: center; padding: 40px;'>No messages recorded yet.</p>";
                     return;
@@ -1446,7 +1539,7 @@
                 btn.style.borderColor = "var(--success-color, #2ecc71)";
             }
         }
-        
+
         function toggleServices() {
             const isActive = localStorage.getItem("services_active") !== "false";
             localStorage.setItem("services_active", !isActive);
@@ -1454,7 +1547,7 @@
         }
 
         // Hello user logic
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             initSettings();
             const userName = localStorage.getItem("userName");
             if (userName) {
@@ -1468,7 +1561,7 @@
 
             let sqlOut = "INSERT INTO leads (phone, business_type, team_size) VALUES\n";
             let values = [];
-            
+
             rows.slice(1).forEach(row => {
                 if (row.length >= 3) {
                     const p = String(row[0] || "").replace(/'/g, "");
@@ -1477,7 +1570,7 @@
                     values.push(`('${p}', '${b}', '${t}')`);
                 }
             });
-            
+
             if (values.length > 0) {
                 sqlOut += values.join(",\n") + ";";
                 document.getElementById("sqlOutputContent").value = sqlOut;
@@ -1488,22 +1581,22 @@
 
         function convertCSVtoSQL() {
             const fileInput = document.getElementById("csvFileInput");
-            if(fileInput.files.length === 0) return alert("Please select a file first!");
+            if (fileInput.files.length === 0) return alert("Please select a file first!");
 
             const file = fileInput.files[0];
             const reader = new FileReader();
-            
+
             if (file.name.endsWith(".xls") || file.name.endsWith(".xlsx")) {
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, {type: 'array'});
+                    const workbook = XLSX.read(data, { type: 'array' });
                     const firstSheet = workbook.SheetNames[0];
-                    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet], {header: 1});
+                    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet], { header: 1 });
                     renderSQLFromRows(rows);
                 };
                 reader.readAsArrayBuffer(file);
             } else {
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     const text = e.target.result;
                     const rows = text.split("\n").map(r => r.trim()).filter(r => r).map(r => r.split(","));
                     renderSQLFromRows(rows);
@@ -1516,15 +1609,15 @@
             convertCSVtoSQL();
             setTimeout(() => {
                 const sqlText = document.getElementById("sqlOutputContent").value;
-                if(!sqlText || sqlText.includes("-- No valid")) return;
+                if (!sqlText || sqlText.includes("-- No valid")) return;
                 pushSQLToDatabase();
             }, 300); // Context sync delay for FileReader parsing loop
         }
 
         function downloadSQLFile() {
             const sqlText = document.getElementById("sqlOutputContent").value;
-            if(!sqlText) return alert("No SQL generated to download.");
-            const blob = new Blob([sqlText], {type: "text/plain"});
+            if (!sqlText) return alert("No SQL generated to download.");
+            const blob = new Blob([sqlText], { type: "text/plain" });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
@@ -1534,22 +1627,22 @@
 
         async function pushSQLToDatabase() {
             const sqlText = document.getElementById("sqlOutputContent").value;
-            if(!sqlText || sqlText.includes("-- No valid")) return alert("Please generate valid SQL first.");
-            
+            if (!sqlText || sqlText.includes("-- No valid")) return alert("Please generate valid SQL first.");
+
             try {
-                const res = await fetch("http://127.0.0.1:8000/execute-sql", {
+                const res = await fetch("/execute-sql", {
                     method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({sql_script: sqlText})
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ sql_script: sqlText })
                 });
                 const data = await res.json();
-                if(data.status === "success") {
+                if (data.status === "success") {
                     alert("✅ SQL File Executed! Database populated successfully.");
                     document.getElementById("sqlOutputContent").value = "";
                 } else {
                     alert("SQL execution failed: " + data.error);
                 }
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
             }
         }
@@ -1568,8 +1661,28 @@
         }
 
         async function triggerExotelCall(event) {
+            const phone = document.getElementById("aiPhoneInput").value;
+            if (!phone) { alert("Enter phone number"); return; }
+
+            try {
+                const res = await fetch("/make-call", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ phone })
+                });
+                const data = await res.json();
+                if (data.status === 200) {
+                    alert("🚀 Call initiated successfully!");
+                } else {
+                    const message = data.detail || data.data || data.response || "Server Error";
+                    alert("❌ Call failed: " + message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Server error");
+            }
+
             closeAiModal();
-            alert("📞 To start a call:\n\n1. Dial your Exotel virtual number from your phone\n2. Exotel will route it to your /voice endpoint\n3. Watch the Uvicorn terminal for: CALL RECEIVED: {...}\n\nMake sure ngrok is running on port 8000!");
         }
     </script>
 </body>

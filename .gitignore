@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+service-account.json
+cloudflared.exe
+*.exe
+Codequesters/

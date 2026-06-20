@@ -10,6 +10,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Expose port and run using Gunicorn with WebSocket worker
+# Expose port and run using Uvicorn
 EXPOSE 8080
-CMD ["gunicorn", "-b", "0.0.0.0:8080", "--workers", "1", "--threads", "8", "app:app"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"]

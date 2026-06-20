@@ -7,6 +7,8 @@ CREATE TABLE leads (
     meeting_time TEXT,
     call_summary TEXT,
     transcript TEXT,
+    lead_score INT DEFAULT 0,
+    lead_quality TEXT DEFAULT 'Cold',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
