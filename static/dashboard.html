@@ -1191,11 +1191,24 @@
     <!-- Chart.js for Revenue Chart -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Check authentication
-        const sessionToken = localStorage.getItem('sessionToken') || sessionStorage.getItem('sessionToken');
-        if (!sessionToken) {
-            window.location.href = 'login.html';
-        }
+        // Task 3: Check authentication via httpOnly session cookie (server-side).
+        // Cookies are sent automatically with same-origin requests — no localStorage needed.
+        (async function checkAuth() {
+            try {
+                const res = await fetch('/api/me', { credentials: 'same-origin' });
+                if (!res.ok) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                const me = await res.json();
+                // Display email prefix as welcome name, fall back to full email
+                const name = me.email ? me.email.split('@')[0] : 'User';
+                document.getElementById('welcomeMessage').innerText = 'Hello ' + name;
+                document.querySelector('.user-avatar').textContent = name.slice(0,2).toUpperCase();
+            } catch (e) {
+                window.location.href = 'login.html';
+            }
+        })();
 
         // Revenue Chart
         const ctx = document.getElementById('revenueChart').getContext('2d');
@@ -1284,23 +1297,18 @@
         });
     </script>
     <script>
-        // Hello user logic
-        document.addEventListener("DOMContentLoaded", function () {
-            const userName = localStorage.getItem("userName");
-            if (userName) {
-                document.getElementById("welcomeMessage").innerText = "Hello " + userName;
-            }
-        });
+        // Welcome message is now set by the checkAuth() call above via /api/me.
 
         // 1-4 Unified Sync Dashboard
         async function syncDashboard() {
             try {
-                // Fetch basic stats from endpoint
-                const statsRes = await fetch("/stats");
+                // Cookies are sent automatically for same-origin requests
+                const statsRes = await fetch("/stats", { credentials: 'same-origin' });
+                if (statsRes.status === 401) { window.location.href = 'login.html'; return; }
                 const stats = await statsRes.json();
-                
-                // Fetch leads for all lists and advanced counters
-                const leadsRes = await fetch("/leads");
+
+                const leadsRes = await fetch("/leads", { credentials: 'same-origin' });
+                if (leadsRes.status === 401) { window.location.href = 'login.html'; return; }
                 const leads = await leadsRes.json();
 
                 // 1. Basic Stat Cards
@@ -1387,7 +1395,8 @@
 
         async function showLeadDetails(id) {
             try {
-                const res = await fetch(`/leads/${id}`);
+                const res = await fetch(`/leads/${id}`, { credentials: 'same-origin' });
+                if (res.status === 401) { window.location.href = 'login.html'; return; }
                 const l = await res.json();
                 alert(`--- Lead Details ---\n\nTranscript: ${l.transcript}\n\nSummary: ${l.summary}\n\nLead Score: ${l.lead_score}/100`);
             } catch(e) {}
@@ -1407,7 +1416,8 @@
 
         async function loadNotifications() {
             try {
-                const res = await fetch("/leads");
+                const res = await fetch("/leads", { credentials: 'same-origin' });
+                if (res.status === 401) { window.location.href = 'login.html'; return; }
                 const leads = await res.json();
 
                 const list = document.getElementById("noti-list");
@@ -1438,7 +1448,8 @@
         setInterval(async () => {
             if (localStorage.getItem("services_active") === "false") return;
             try {
-                const res = await fetch("/leads");
+                const res = await fetch("/leads", { credentials: 'same-origin' });
+                if (!res.ok) return;
                 const leads = await res.json();
                 if (leads.length > 0 && !isNotiOpen) {
                     document.getElementById("noti-dot").style.display = "block";
@@ -1446,10 +1457,12 @@
             } catch (e) { }
         }, 10000);
 
-        // 6. LOGOUT BUTTON
-        function logout() {
-            localStorage.removeItem("sessionToken");
-            window.location.href = "login.html";
+        // 6. LOGOUT BUTTON — Task 3: call server to clear httpOnly cookie
+        async function logout() {
+            try {
+                await fetch('/logout', { method: 'POST', credentials: 'same-origin' });
+            } catch (e) { /* ignore */ }
+            window.location.href = 'login.html';
         }
 
         // 7. MULTI-TAB ROUTING
@@ -1474,7 +1487,8 @@
         // API Analytics Loader
         async function loadEndpoints() {
             try {
-                const res = await fetch("/api/analytics");
+                const res = await fetch("/api/analytics", { credentials: 'same-origin' });
+                if (res.status === 401) { window.location.href = 'login.html'; return; }
                 const data = await res.json();
                 const tbody = document.getElementById("analytics-tbody");
                 tbody.innerHTML = "";
@@ -1494,7 +1508,8 @@
         // Transcripts & Messages Loader
         async function loadMessages() {
             try {
-                const res = await fetch("/leads");
+                const res = await fetch("/leads", { credentials: 'same-origin' });
+                if (res.status === 401) { window.location.href = 'login.html'; return; }
                 const leads = await res.json();
                 const container = document.getElementById("messages-container");
                 container.innerHTML = "";
@@ -1546,28 +1561,33 @@
             initSettings();
         }
 
-        // Hello user logic
         document.addEventListener("DOMContentLoaded", function () {
             initSettings();
-            const userName = localStorage.getItem("userName");
-            if (userName) {
-                document.getElementById("welcomeMessage").innerText = "Hello " + userName;
-            }
+            // Welcome message is set by checkAuth() above via /api/me
         });
 
         // 9. DATA UI CONVERTER
+        // Stores parsed rows for structured import (used by importRowsToDatabase)
+        let _parsedRows = [];
+
         function renderSQLFromRows(rows) {
             if (rows.length < 2) return alert("File seems empty or invalid.");
 
+            _parsedRows = []; // reset
             let sqlOut = "INSERT INTO leads (phone, business_type, team_size) VALUES\n";
             let values = [];
 
             rows.slice(1).forEach(row => {
                 if (row.length >= 3) {
-                    const p = String(row[0] || "").replace(/'/g, "");
-                    const b = String(row[1] || "").replace(/'/g, "");
-                    const t = String(row[2] || "").replace(/'/g, "");
-                    values.push(`('${p}', '${b}', '${t}')`);
+                    const p = String(row[0] || "").trim();
+                    const b = String(row[1] || "").trim();
+                    const t = String(row[2] || "").trim();
+                    if (p) {
+                        _parsedRows.push({ phone: p, business_type: b, team_size: t || null });
+                        // Display-only SQL (never sent to server)
+                        const ps = p.replace(/'/g, ""), bs = b.replace(/'/g, ""), ts = t.replace(/'/g, "");
+                        values.push(`('${ps}', '${bs}', '${ts}')`);
+                    }
                 }
             });
 
@@ -1606,12 +1626,12 @@
         }
 
         function convertAndPushToDatabase() {
+            // Parse CSV first, then import using structured JSON (never raw SQL)
             convertCSVtoSQL();
             setTimeout(() => {
-                const sqlText = document.getElementById("sqlOutputContent").value;
-                if (!sqlText || sqlText.includes("-- No valid")) return;
-                pushSQLToDatabase();
-            }, 300); // Context sync delay for FileReader parsing loop
+                if (_parsedRows.length === 0) return;
+                importRowsToDatabase(_parsedRows);
+            }, 300); // FileReader is async; wait for it to finish
         }
 
         function downloadSQLFile() {
@@ -1625,25 +1645,36 @@
             a.click();
         }
 
+        // Task 1: replaced /execute-sql (raw SQL) with /import-leads (structured JSON)
         async function pushSQLToDatabase() {
-            const sqlText = document.getElementById("sqlOutputContent").value;
-            if (!sqlText || sqlText.includes("-- No valid")) return alert("Please generate valid SQL first.");
+            if (_parsedRows.length === 0) {
+                return alert("Please generate valid data from a CSV file first.");
+            }
+            await importRowsToDatabase(_parsedRows);
+        }
 
+        async function importRowsToDatabase(rows) {
+            if (!rows || rows.length === 0) return alert("No rows to import.");
             try {
-                const res = await fetch("/execute-sql", {
+                const res = await fetch("/import-leads", {
                     method: "POST",
+                    credentials: 'same-origin',
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ sql_script: sqlText })
+                    body: JSON.stringify({ rows })
                 });
+                if (res.status === 401) { window.location.href = 'login.html'; return; }
                 const data = await res.json();
                 if (data.status === "success") {
-                    alert("✅ SQL File Executed! Database populated successfully.");
+                    alert(`✅ ${data.imported} lead(s) imported successfully!`);
                     document.getElementById("sqlOutputContent").value = "";
+                    _parsedRows = [];
+                    syncDashboard();
                 } else {
-                    alert("SQL execution failed: " + data.error);
+                    alert("Import failed: " + (data.detail || "Unknown error"));
                 }
             } catch (e) {
                 console.error(e);
+                alert("Server error during import.");
             }
         }
 

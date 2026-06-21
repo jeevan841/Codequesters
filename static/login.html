@@ -583,8 +583,7 @@
                 if (response.ok) {
                     showLoading(false);
                     showSuccess("Login successful! Redirecting...");
-                    localStorage.setItem("sessionToken", result.token);
-                    localStorage.setItem("userName", email.split('@')[0]);
+                    // Session cookie is set by the server (httpOnly) — no localStorage needed.
                     setTimeout(() => { window.location.href = "dashboard.html"; }, 1000);
                     return;
                 } else {
