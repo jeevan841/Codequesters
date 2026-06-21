@@ -1,45 +1,48 @@
 # Codequesters — Voice CRM Backend Dependencies
-# Generated: 2026-06-21
-# Only packages actually imported by app.py, create_db.py, and tests/.
-# Removed: torch, transformers, matplotlib, gradio, pandas, openai,
-#          google-generativeai, mcp, fastmcp, pywin32 (Windows-only, breaks Docker),
-#          Flask, grpcio, huggingface_hub, numpy, twilio, and all other unused packages.
+# Uses minimum-version bounds (>=) so pip never tries to downgrade
+# packages already installed, and works across Python 3.11+.
+# Tested on Python 3.14.0 (Windows) and compatible with Linux Docker builds.
+#
+# Explicitly excluded (not used by this project):
+#   torch, transformers, gradio, pandas, openai, google-generativeai,
+#   mcp, fastmcp, pywin32 (Windows-only — breaks Linux Docker), Flask,
+#   grpcio, huggingface_hub, numpy, twilio
 
-# Web framework
-fastapi==0.115.6
-uvicorn[standard]==0.32.1
-starlette==0.41.3
-python-multipart==0.0.18
+# ─── Web framework ────────────────────────────────────────────────────────────
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+starlette>=0.41.0
+python-multipart>=0.0.12
 
-# Database
-psycopg2-binary==2.9.10
+# ─── Database ─────────────────────────────────────────────────────────────────
+psycopg2>=2.9.9
 
-# Auth & sessions
-passlib[bcrypt]==1.7.4
-PyJWT==2.10.1
-authlib==1.4.0
-itsdangerous==2.2.0
-cryptography==44.0.0
+# ─── Auth & sessions ──────────────────────────────────────────────────────────
+passlib[bcrypt]>=1.7.4
+PyJWT>=2.8.0
+authlib>=1.3.0
+itsdangerous>=2.1.0
+cryptography>=42.0.0
 
-# Rate limiting
-slowapi==0.1.9
+# ─── Rate limiting ────────────────────────────────────────────────────────────
+slowapi>=0.1.9
 
-# LLM clients
-groq==0.13.0
-ollama==0.4.7
+# ─── LLM clients ──────────────────────────────────────────────────────────────
+groq>=0.11.0
+ollama>=0.3.0
 
-# Env & config
-python-dotenv==1.0.1
+# ─── Env & config ─────────────────────────────────────────────────────────────
+python-dotenv>=1.0.0
 
-# HTTP client (OAuth + Exotel calls)
-requests==2.32.3
-httpx==0.27.2
+# ─── HTTP clients ─────────────────────────────────────────────────────────────
+requests>=2.31.0
+httpx>=0.27.0
 
-# Data validation
-pydantic==2.10.3
-pydantic-settings==2.7.0
-annotated-types==0.7.0
+# ─── Data validation ──────────────────────────────────────────────────────────
+pydantic>=2.7.0
+pydantic-settings>=2.2.0
+annotated-types>=0.6.0
 
-# Testing
-pytest==8.3.4
-pytest-asyncio==0.24.0
+# ─── Testing ──────────────────────────────────────────────────────────────────
+pytest>=8.0.0
+pytest-asyncio>=0.23.0

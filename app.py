@@ -24,6 +24,7 @@ import tempfile
 from contextlib import contextmanager, asynccontextmanager
 from typing import List, Optional
 
+import bcrypt
 import jwt
 import psycopg2
 import psycopg2.pool
@@ -35,7 +36,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from groq import Groq
-from passlib.context import CryptContext
 from pydantic import BaseModel, field_validator
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -142,8 +142,17 @@ app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
 
 # ---------------------------------------------------------------------------
 # Auth helpers
-# ---------------------------------------------------------------------------
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# ─── Password hashing (direct bcrypt — avoids passlib/bcrypt 5.x incompatibility) ──
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+
+def verify_password(password: str, hashed: str) -> bool:
+    try:
+        return bcrypt.checkpw(password.encode(), hashed.encode())
+    except Exception:
+        return False
 
 
 def create_jwt(user_id: int) -> str:
@@ -276,7 +285,7 @@ def login(data: LoginRequest, request: Request, response: Response):
     if not row:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     user_id, hashed_pwd = row
-    if not hashed_pwd or not pwd_context.verify(data.password, hashed_pwd):
+    if not hashed_pwd or not verify_password(data.password, hashed_pwd):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     set_auth_cookie(response, user_id)
     return {"status": "success"}
@@ -287,7 +296,7 @@ def login(data: LoginRequest, request: Request, response: Response):
 def signup(data: SignupRequest, request: Request, response: Response):
     with get_db() as conn:
         cur = conn.cursor()
-        hashed = pwd_context.hash(data.password)
+        hashed = hash_password(data.password)
         try:
             cur.execute(
                 "INSERT INTO users (email, password) VALUES (%s, %s)",
