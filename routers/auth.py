@@ -2,17 +2,14 @@
 routers/auth.py — Authentication, signup, login, OAuth routes.
 """
 
+import bcrypt
 import json
 import os
 import re
-from typing import Optional
 
-import jwt
-import psycopg2
 from authlib.integrations.starlette_client import OAuth
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import HTMLResponse
-from passlib.context import CryptContext
 from pydantic import BaseModel, field_validator
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -20,18 +17,23 @@ from slowapi.util import get_remote_address
 from core.db import get_db
 from core.security import (
     COOKIE_NAME,
-    SESSION_SECRET,
-    JWT_ALGORITHM,
-    SECURE_COOKIES,
-    create_jwt,
-    decode_jwt,
     get_current_user,
     set_auth_cookie,
 )
 
 router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def _hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+
+def _verify_password(password: str, hashed: str) -> bool:
+    try:
+        return bcrypt.checkpw(password.encode(), hashed.encode())
+    except Exception:
+        return False
 
 # ─── OAuth ────────────────────────────────────────────────────────────────────
 oauth = OAuth()
@@ -104,7 +106,7 @@ def login(data: LoginRequest, request: Request, response: Response):
     if not row:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     user_id, hashed_pwd = row
-    if not hashed_pwd or not pwd_context.verify(data.password, hashed_pwd):
+    if not hashed_pwd or not _verify_password(data.password, hashed_pwd):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     set_auth_cookie(response, user_id)
     return {"status": "success"}
@@ -115,7 +117,7 @@ def login(data: LoginRequest, request: Request, response: Response):
 def signup(data: SignupRequest, request: Request, response: Response):
     with get_db() as conn:
         cur = conn.cursor()
-        hashed = pwd_context.hash(data.password)
+        hashed = _hash_password(data.password)
         try:
             cur.execute(
                 "INSERT INTO users (email, password) VALUES (%s, %s)",
